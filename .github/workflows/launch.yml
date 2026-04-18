@@ -2,6 +2,9 @@ name: Build and release
 
 on:
   push:
+    branches:
+      - main
+      - master
     tags:
       - 'v*.*.*'
 
@@ -34,7 +37,7 @@ jobs:
         run: npm ci
 
       - name: Build and publish
-        run: npm run ${{ matrix.build_cmd }} -- --publish always
+        run: npm run ${{ matrix.build_cmd }} -- --publish ${{ startsWith(github.ref, 'refs/tags/') && 'always' || 'never' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
