@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import type { JSX } from 'react'
 import { Block } from '../types'
 import { playBlockEnd, playSessionComplete } from '../utils/sound'
@@ -48,16 +48,23 @@ export default function TimerView({ blocks, onFinish }: Props): JSX.Element {
     setTimeLeft((t) => Math.max(1, Math.min(totalSeconds, t + seconds)))
   }
 
+  const cancelSoundRef = useRef<(() => void) | null>(null)
+
   const markBlockDone = useCallback(() => {
     if (currentIndex === blocks.length - 1) {
-      playSessionComplete()
+      cancelSoundRef.current = playSessionComplete()
       setIsComplete(true)
     } else {
-      playBlockEnd()
+      cancelSoundRef.current = playBlockEnd()
       setIsRunning(false)
       setBlockDone(true)
     }
   }, [currentIndex, blocks.length])
+
+  // Cancel any in-flight sound timeouts on unmount
+  useEffect(() => {
+    return () => { cancelSoundRef.current?.() }
+  }, [])
 
   function continueToNext() {
     const next = currentIndex + 1
