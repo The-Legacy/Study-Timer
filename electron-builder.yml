@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: study_timer
+productName: StudyTimer
 publish:
   provider: github
   releaseType: release
@@ -18,8 +18,8 @@ win:
   executableName: study_timer
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
+  shortcutName: StudyTimer
+  uninstallDisplayName: StudyTimer
   createDesktopShortcut: always
 mac:
   entitlementsInherit: build/entitlements.mac.plist
