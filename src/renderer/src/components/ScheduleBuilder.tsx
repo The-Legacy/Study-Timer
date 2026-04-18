@@ -318,7 +318,7 @@ export default function ScheduleBuilder({ blocks, onBlocksChange, onStart }: Pro
             </button>
           )}
           <button className="btn-start" onClick={onStart} disabled={blocks.length === 0}>
-            Start Session →
+            Start Session
           </button>
         </div>
       </footer>
