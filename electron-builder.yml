@@ -37,7 +37,6 @@ mac:
 linux:
   target:
     - AppImage
-    - snap
     - deb
   maintainer: electronjs.org
   category: Utility
