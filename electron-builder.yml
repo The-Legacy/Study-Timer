@@ -46,3 +46,5 @@ linux:
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
+electronDownload:
+  mirror: https://github.com/electron/electron/releases/download/v
