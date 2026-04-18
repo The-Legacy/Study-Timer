@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Block } from '../types'
 import { playBlockEnd, playSessionComplete } from '../utils/sound'
+import { randomChallenge } from '../utils/challenges'
+import Confetti from './Confetti'
 
 interface Props {
   blocks: Block[]
@@ -30,50 +32,60 @@ export default function TimerView({ blocks, onFinish }: Props): JSX.Element {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [timeLeft, setTimeLeft] = useState(blocks[0].durationMinutes * 60)
   const [isRunning, setIsRunning] = useState(true)
+  const [blockDone, setBlockDone] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
+
+  const challenge = useMemo(() => randomChallenge(), [currentIndex])
 
   const currentBlock = blocks[currentIndex]
   const totalSeconds = currentBlock.durationMinutes * 60
   const elapsed = totalSeconds - timeLeft
   const progress = totalSeconds > 0 ? (elapsed / totalSeconds) * 100 : 0
+  const isLast = currentIndex === blocks.length - 1
 
-  const advance = useCallback(() => {
-    const next = currentIndex + 1
-    if (next >= blocks.length) {
+  function nudge(seconds: number) {
+    setTimeLeft((t) => Math.max(1, Math.min(totalSeconds, t + seconds)))
+  }
+
+  const markBlockDone = useCallback(() => {
+    if (currentIndex === blocks.length - 1) {
       playSessionComplete()
       setIsComplete(true)
     } else {
       playBlockEnd()
-      setCurrentIndex(next)
-      setTimeLeft(blocks[next].durationMinutes * 60)
-      setIsRunning(true)
+      setIsRunning(false)
+      setBlockDone(true)
     }
-  }, [currentIndex, blocks])
+  }, [currentIndex, blocks.length])
 
-  // Interval tick — reset when block changes
+  function continueToNext() {
+    const next = currentIndex + 1
+    setCurrentIndex(next)
+    setTimeLeft(blocks[next].durationMinutes * 60)
+    setIsRunning(true)
+    setBlockDone(false)
+  }
+
   useEffect(() => {
-    if (!isRunning || isComplete) return
+    if (!isRunning || blockDone || isComplete) return
     const id = setInterval(() => {
       setTimeLeft((t) => (t > 0 ? t - 1 : 0))
     }, 1000)
     return () => clearInterval(id)
-  }, [isRunning, isComplete, currentIndex])
+  }, [isRunning, blockDone, isComplete, currentIndex])
 
-  // Advance when block time runs out
   useEffect(() => {
-    if (timeLeft === 0 && isRunning && !isComplete) {
-      advance()
+    if (timeLeft === 0 && isRunning && !blockDone && !isComplete) {
+      markBlockDone()
     }
-  }, [timeLeft, advance, isRunning, isComplete])
+  }, [timeLeft, isRunning, blockDone, isComplete, markBlockDone])
 
   if (isComplete) {
     return (
       <div className="complete-screen">
-        <div className="trophy">🎉</div>
+        <Confetti />
         <h1>Session Complete!</h1>
-        <p>
-          You finished all {blocks.length} block{blocks.length !== 1 ? 's' : ''}.
-        </p>
+        <p>You crushed all {blocks.length} block{blocks.length !== 1 ? 's' : ''}.</p>
         <button className="btn-new-session" onClick={onFinish}>
           New Session
         </button>
@@ -83,6 +95,26 @@ export default function TimerView({ blocks, onFinish }: Props): JSX.Element {
 
   return (
     <div className="timer-view">
+      {blockDone && (
+        <div className="block-done-overlay">
+          <div className="block-done-card">
+            <div className="block-done-title">
+              {currentBlock.type === 'study' ? 'Nice work!' : 'Break over!'}
+            </div>
+            <div className="block-done-label">{currentBlock.label}</div>
+            <div className="block-done-next">
+              Up next:&nbsp;<strong>{blocks[currentIndex + 1].label}</strong>
+              <span className={`block-badge ${blocks[currentIndex + 1].type}`} style={{ marginLeft: 8 }}>
+                {blocks[currentIndex + 1].type.toUpperCase()}
+              </span>
+            </div>
+            <button className="btn-continue" onClick={continueToNext}>
+              Continue →
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="timer-main">
         <div className={`timer-type-label ${currentBlock.type}-label`}>
           <span className="dot" />
@@ -90,6 +122,14 @@ export default function TimerView({ blocks, onFinish }: Props): JSX.Element {
         </div>
 
         <div className="timer-block-name">{currentBlock.label}</div>
+
+        {currentBlock.type === 'break' && (
+          <div className="challenge-card-inline">
+            <div className="challenge-tag">{challenge.tag}</div>
+            <div className="challenge-title">{challenge.title}</div>
+            <div className="challenge-desc">{challenge.description}</div>
+          </div>
+        )}
 
         <div className="timer-digits">{formatTime(timeLeft)}</div>
 
@@ -107,11 +147,17 @@ export default function TimerView({ blocks, onFinish }: Props): JSX.Element {
         </div>
 
         <div className="timer-controls">
-          <button className="btn-pause" onClick={() => setIsRunning((r) => !r)}>
-            {isRunning ? '⏸ Pause' : '▶ Resume'}
-          </button>
-          <button className="btn-skip" onClick={advance}>
-            {currentIndex < blocks.length - 1 ? 'Skip →' : 'Finish'}
+          <div className="nudge-row">
+            <button className="btn-nudge" onClick={() => nudge(-300)} title="Skip ahead 5 min">−5m</button>
+            <button className="btn-nudge" onClick={() => nudge(-60)} title="Skip ahead 1 min">−1m</button>
+            <button className="btn-pause" onClick={() => setIsRunning((r) => !r)}>
+              {isRunning ? 'Pause' : 'Resume'}
+            </button>
+            <button className="btn-nudge" onClick={() => nudge(60)} title="Add 1 min">+1m</button>
+            <button className="btn-nudge" onClick={() => nudge(300)} title="Add 5 min">+5m</button>
+          </div>
+          <button className="btn-skip" onClick={markBlockDone}>
+            {isLast ? 'Finish' : 'Skip Block →'}
           </button>
         </div>
       </div>
@@ -135,8 +181,8 @@ export default function TimerView({ blocks, onFinish }: Props): JSX.Element {
                   <div className="sidebar-item-label">{block.label}</div>
                   <div className="sidebar-item-duration">{formatDuration(block.durationMinutes)}</div>
                 </div>
-                {isDone && <span className="sidebar-check">✓</span>}
-                {isCurrent && <span className="sidebar-arrow">▶</span>}
+                {isDone && <span className="sidebar-check" />}
+                {isCurrent && <span className="sidebar-arrow" />}
               </div>
             )
           })}

@@ -6,3 +6,10 @@ export interface Block {
   label: string
   durationMinutes: number
 }
+
+export interface SavedPlan {
+  id: string
+  name: string
+  blocks: Block[]
+  createdAt: number
+}

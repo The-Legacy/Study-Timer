@@ -17,15 +17,17 @@ function playTone(frequency: number, duration: number, volume = 0.25): void {
   }
 }
 
-export function playBlockEnd(): void {
+export function playBlockEnd(): () => void {
   playTone(880, 0.12)
-  setTimeout(() => playTone(660, 0.12), 160)
-  setTimeout(() => playTone(880, 0.25), 320)
+  const t1 = setTimeout(() => playTone(660, 0.12), 160)
+  const t2 = setTimeout(() => playTone(880, 0.25), 320)
+  return () => { clearTimeout(t1); clearTimeout(t2) }
 }
 
-export function playSessionComplete(): void {
+export function playSessionComplete(): () => void {
   playTone(523, 0.15)
-  setTimeout(() => playTone(659, 0.15), 200)
-  setTimeout(() => playTone(784, 0.15), 400)
-  setTimeout(() => playTone(1047, 0.4), 600)
+  const t1 = setTimeout(() => playTone(659, 0.15), 200)
+  const t2 = setTimeout(() => playTone(784, 0.15), 400)
+  const t3 = setTimeout(() => playTone(1047, 0.4), 600)
+  return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
 }
