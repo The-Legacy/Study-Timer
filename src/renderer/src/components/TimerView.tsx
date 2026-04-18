@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import type { JSX } from 'react'
 import { Block } from '../types'
 import { playBlockEnd, playSessionComplete } from '../utils/sound'
 import { randomChallenge } from '../utils/challenges'

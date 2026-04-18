@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import type { JSX } from 'react'
 import { Block, BlockType, SavedPlan } from '../types'
 import { loadPlans, savePlan, deletePlan } from '../utils/storage'
 

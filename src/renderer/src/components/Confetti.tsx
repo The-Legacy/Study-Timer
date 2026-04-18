@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import type { JSX } from 'react'
 
 const COLORS = ['#a371f7', '#58a6ff', '#3fb950', '#ffa657', '#f78166', '#ff7b72', '#ffd700']
 

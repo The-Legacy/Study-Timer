@@ -1,3 +1,4 @@
+import type { JSX } from 'react'
 import { Theme } from '../App'
 
 interface Props {

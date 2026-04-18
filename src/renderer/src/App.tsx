@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import type { JSX } from 'react'
 import ScheduleBuilder from './components/ScheduleBuilder'
 import TimerView from './components/TimerView'
 import TitleBar from './components/TitleBar'
